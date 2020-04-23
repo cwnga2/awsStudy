@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: my api
+Resources:
+  myLambdaFunction:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName: myLambdaFunction
+      Handler: index.handler
+      Runtime: nodejs10.x
+      CodeUri: .
+      Description: my lambda function
+      MemorySize: 128
+      Timeout: 30
+      Role: '<YOUR ROLE ARN>'
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            Path: '/v1/test' # api path
+            Method: GET
+            RestApiId: !Ref myApi
+  myLambdaFunctionLogGroup:
+    Type: "AWS::Logs::LogGroup"
+    DependsOn: "myLambdaFunction"
+    Properties:
+      RetentionInDays: 7
+      LogGroupName: !Join ["", ["/aws/lambda/", !Ref myLambdaFunction]]
+
+  myApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionUri: ./swagger.json
+      StageName: staging
+
+Outputs:
+  myApiId:
+    Description: myApi
+    Value: !Ref myApi
+    Export:
+      Name: myApiId
+
